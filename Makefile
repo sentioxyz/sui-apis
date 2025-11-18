@@ -19,6 +19,10 @@ lint: ## Run buf lint
 check-breaking: ## Run buf breaking
 	buf breaking --against 'https://github.com/MystenLabs/sui-apis.git#branch=main'
 
+.PHONY: generate
+generate: ## Generate Go code from protobuf definitions
+	buf generate && rm -rf google
+
 .PHONY: ci
 ci: check-fmt lint check-breaking ## Run the full CI process
 
