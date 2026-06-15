@@ -226,7 +226,59 @@ func (x AccumulatorWrite_AccumulatorOperation) Number() protoreflect.EnumNumber 
 
 // Deprecated: Use AccumulatorWrite_AccumulatorOperation.Descriptor instead.
 func (AccumulatorWrite_AccumulatorOperation) EnumDescriptor() ([]byte, []int) {
-	return file_sui_rpc_v2_effects_proto_rawDescGZIP(), []int{2, 0}
+	return file_sui_rpc_v2_effects_proto_rawDescGZIP(), []int{3, 0}
+}
+
+type AccumulatorWrite_AccumulatorValue int32
+
+const (
+	AccumulatorWrite_ACCUMULATOR_VALUE_UNKNOWN AccumulatorWrite_AccumulatorValue = 0
+	AccumulatorWrite_INTEGER                   AccumulatorWrite_AccumulatorValue = 1
+	AccumulatorWrite_INTEGER_TUPLE             AccumulatorWrite_AccumulatorValue = 2
+	AccumulatorWrite_EVENT_DIGEST              AccumulatorWrite_AccumulatorValue = 3
+)
+
+// Enum value maps for AccumulatorWrite_AccumulatorValue.
+var (
+	AccumulatorWrite_AccumulatorValue_name = map[int32]string{
+		0: "ACCUMULATOR_VALUE_UNKNOWN",
+		1: "INTEGER",
+		2: "INTEGER_TUPLE",
+		3: "EVENT_DIGEST",
+	}
+	AccumulatorWrite_AccumulatorValue_value = map[string]int32{
+		"ACCUMULATOR_VALUE_UNKNOWN": 0,
+		"INTEGER":                   1,
+		"INTEGER_TUPLE":             2,
+		"EVENT_DIGEST":              3,
+	}
+)
+
+func (x AccumulatorWrite_AccumulatorValue) Enum() *AccumulatorWrite_AccumulatorValue {
+	p := new(AccumulatorWrite_AccumulatorValue)
+	*p = x
+	return p
+}
+
+func (x AccumulatorWrite_AccumulatorValue) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (AccumulatorWrite_AccumulatorValue) Descriptor() protoreflect.EnumDescriptor {
+	return file_sui_rpc_v2_effects_proto_enumTypes[4].Descriptor()
+}
+
+func (AccumulatorWrite_AccumulatorValue) Type() protoreflect.EnumType {
+	return &file_sui_rpc_v2_effects_proto_enumTypes[4]
+}
+
+func (x AccumulatorWrite_AccumulatorValue) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use AccumulatorWrite_AccumulatorValue.Descriptor instead.
+func (AccumulatorWrite_AccumulatorValue) EnumDescriptor() ([]byte, []int) {
+	return file_sui_rpc_v2_effects_proto_rawDescGZIP(), []int{3, 1}
 }
 
 type UnchangedConsensusObject_UnchangedConsensusObjectKind int32
@@ -279,11 +331,11 @@ func (x UnchangedConsensusObject_UnchangedConsensusObjectKind) String() string {
 }
 
 func (UnchangedConsensusObject_UnchangedConsensusObjectKind) Descriptor() protoreflect.EnumDescriptor {
-	return file_sui_rpc_v2_effects_proto_enumTypes[4].Descriptor()
+	return file_sui_rpc_v2_effects_proto_enumTypes[5].Descriptor()
 }
 
 func (UnchangedConsensusObject_UnchangedConsensusObjectKind) Type() protoreflect.EnumType {
-	return &file_sui_rpc_v2_effects_proto_enumTypes[4]
+	return &file_sui_rpc_v2_effects_proto_enumTypes[5]
 }
 
 func (x UnchangedConsensusObject_UnchangedConsensusObjectKind) Number() protoreflect.EnumNumber {
@@ -292,7 +344,7 @@ func (x UnchangedConsensusObject_UnchangedConsensusObjectKind) Number() protoref
 
 // Deprecated: Use UnchangedConsensusObject_UnchangedConsensusObjectKind.Descriptor instead.
 func (UnchangedConsensusObject_UnchangedConsensusObjectKind) EnumDescriptor() ([]byte, []int) {
-	return file_sui_rpc_v2_effects_proto_rawDescGZIP(), []int{3, 0}
+	return file_sui_rpc_v2_effects_proto_rawDescGZIP(), []int{4, 0}
 }
 
 // The effects of executing a transaction.
@@ -618,19 +670,83 @@ func (x *ChangedObject) GetObjectType() string {
 	return ""
 }
 
+// An entry in an event digest accumulator value.
+type EventDigestEntry struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Index of the event within its transaction.
+	EventIndex *uint64 `protobuf:"varint,1,opt,name=event_index,json=eventIndex,proto3,oneof" json:"event_index,omitempty"`
+	// Digest of the event.
+	Digest        *string `protobuf:"bytes,2,opt,name=digest,proto3,oneof" json:"digest,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *EventDigestEntry) Reset() {
+	*x = EventDigestEntry{}
+	mi := &file_sui_rpc_v2_effects_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *EventDigestEntry) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EventDigestEntry) ProtoMessage() {}
+
+func (x *EventDigestEntry) ProtoReflect() protoreflect.Message {
+	mi := &file_sui_rpc_v2_effects_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EventDigestEntry.ProtoReflect.Descriptor instead.
+func (*EventDigestEntry) Descriptor() ([]byte, []int) {
+	return file_sui_rpc_v2_effects_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *EventDigestEntry) GetEventIndex() uint64 {
+	if x != nil && x.EventIndex != nil {
+		return *x.EventIndex
+	}
+	return 0
+}
+
+func (x *EventDigestEntry) GetDigest() string {
+	if x != nil && x.Digest != nil {
+		return *x.Digest
+	}
+	return ""
+}
+
 type AccumulatorWrite struct {
 	state           protoimpl.MessageState                 `protogen:"open.v1"`
 	Address         *string                                `protobuf:"bytes,1,opt,name=address,proto3,oneof" json:"address,omitempty"`
 	AccumulatorType *string                                `protobuf:"bytes,2,opt,name=accumulator_type,json=accumulatorType,proto3,oneof" json:"accumulator_type,omitempty"`
 	Operation       *AccumulatorWrite_AccumulatorOperation `protobuf:"varint,3,opt,name=operation,proto3,enum=sui.rpc.v2.AccumulatorWrite_AccumulatorOperation,oneof" json:"operation,omitempty"`
-	Value           *uint64                                `protobuf:"varint,5,opt,name=value,proto3,oneof" json:"value,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	ValueKind       *AccumulatorWrite_AccumulatorValue     `protobuf:"varint,4,opt,name=value_kind,json=valueKind,proto3,enum=sui.rpc.v2.AccumulatorWrite_AccumulatorValue,oneof" json:"value_kind,omitempty"`
+	// Set when the accumulator value is an integer (value_kind = INTEGER).
+	IntegerValue *uint64 `protobuf:"varint,5,opt,name=integer_value,json=integerValue,proto3,oneof" json:"integer_value,omitempty"`
+	// Set, with len 2, when the accumulator value is an integer tuple
+	// (value_kind = INTEGER_TUPLE).
+	IntegerTuple []uint64 `protobuf:"varint,6,rep,packed,name=integer_tuple,json=integerTuple,proto3" json:"integer_tuple,omitempty"`
+	// Set when the accumulator value is an event digest list (value_kind = EVENT_DIGEST).
+	// Contains a non-empty list of (event_index, digest) pairs representing
+	// authenticated event stream entries within a transaction.
+	EventDigestValue []*EventDigestEntry `protobuf:"bytes,7,rep,name=event_digest_value,json=eventDigestValue,proto3" json:"event_digest_value,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *AccumulatorWrite) Reset() {
 	*x = AccumulatorWrite{}
-	mi := &file_sui_rpc_v2_effects_proto_msgTypes[2]
+	mi := &file_sui_rpc_v2_effects_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -642,7 +758,7 @@ func (x *AccumulatorWrite) String() string {
 func (*AccumulatorWrite) ProtoMessage() {}
 
 func (x *AccumulatorWrite) ProtoReflect() protoreflect.Message {
-	mi := &file_sui_rpc_v2_effects_proto_msgTypes[2]
+	mi := &file_sui_rpc_v2_effects_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -655,7 +771,7 @@ func (x *AccumulatorWrite) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AccumulatorWrite.ProtoReflect.Descriptor instead.
 func (*AccumulatorWrite) Descriptor() ([]byte, []int) {
-	return file_sui_rpc_v2_effects_proto_rawDescGZIP(), []int{2}
+	return file_sui_rpc_v2_effects_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *AccumulatorWrite) GetAddress() string {
@@ -679,11 +795,32 @@ func (x *AccumulatorWrite) GetOperation() AccumulatorWrite_AccumulatorOperation 
 	return AccumulatorWrite_ACCUMULATOR_OPERATION_UNKNOWN
 }
 
-func (x *AccumulatorWrite) GetValue() uint64 {
-	if x != nil && x.Value != nil {
-		return *x.Value
+func (x *AccumulatorWrite) GetValueKind() AccumulatorWrite_AccumulatorValue {
+	if x != nil && x.ValueKind != nil {
+		return *x.ValueKind
+	}
+	return AccumulatorWrite_ACCUMULATOR_VALUE_UNKNOWN
+}
+
+func (x *AccumulatorWrite) GetIntegerValue() uint64 {
+	if x != nil && x.IntegerValue != nil {
+		return *x.IntegerValue
 	}
 	return 0
+}
+
+func (x *AccumulatorWrite) GetIntegerTuple() []uint64 {
+	if x != nil {
+		return x.IntegerTuple
+	}
+	return nil
+}
+
+func (x *AccumulatorWrite) GetEventDigestValue() []*EventDigestEntry {
+	if x != nil {
+		return x.EventDigestValue
+	}
+	return nil
 }
 
 // A consensus object that wasn't changed during execution.
@@ -705,7 +842,7 @@ type UnchangedConsensusObject struct {
 
 func (x *UnchangedConsensusObject) Reset() {
 	*x = UnchangedConsensusObject{}
-	mi := &file_sui_rpc_v2_effects_proto_msgTypes[3]
+	mi := &file_sui_rpc_v2_effects_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -717,7 +854,7 @@ func (x *UnchangedConsensusObject) String() string {
 func (*UnchangedConsensusObject) ProtoMessage() {}
 
 func (x *UnchangedConsensusObject) ProtoReflect() protoreflect.Message {
-	mi := &file_sui_rpc_v2_effects_proto_msgTypes[3]
+	mi := &file_sui_rpc_v2_effects_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -730,7 +867,7 @@ func (x *UnchangedConsensusObject) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UnchangedConsensusObject.ProtoReflect.Descriptor instead.
 func (*UnchangedConsensusObject) Descriptor() ([]byte, []int) {
-	return file_sui_rpc_v2_effects_proto_rawDescGZIP(), []int{3}
+	return file_sui_rpc_v2_effects_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *UnchangedConsensusObject) GetKind() UnchangedConsensusObject_UnchangedConsensusObjectKind {
@@ -851,22 +988,38 @@ const file_sui_rpc_v2_effects_proto_rawDesc = "" +
 	"\r_output_ownerB\x14\n" +
 	"\x12_accumulator_writeB\x0f\n" +
 	"\r_id_operationB\x0e\n" +
-	"\f_object_type\"\xe2\x02\n" +
+	"\f_object_type\"p\n" +
+	"\x10EventDigestEntry\x12$\n" +
+	"\vevent_index\x18\x01 \x01(\x04H\x00R\n" +
+	"eventIndex\x88\x01\x01\x12\x1b\n" +
+	"\x06digest\x18\x02 \x01(\tH\x01R\x06digest\x88\x01\x01B\x0e\n" +
+	"\f_event_indexB\t\n" +
+	"\a_digest\"\xab\x05\n" +
 	"\x10AccumulatorWrite\x12\x1d\n" +
 	"\aaddress\x18\x01 \x01(\tH\x00R\aaddress\x88\x01\x01\x12.\n" +
 	"\x10accumulator_type\x18\x02 \x01(\tH\x01R\x0faccumulatorType\x88\x01\x01\x12T\n" +
-	"\toperation\x18\x03 \x01(\x0e21.sui.rpc.v2.AccumulatorWrite.AccumulatorOperationH\x02R\toperation\x88\x01\x01\x12\x19\n" +
-	"\x05value\x18\x05 \x01(\x04H\x03R\x05value\x88\x01\x01\"O\n" +
+	"\toperation\x18\x03 \x01(\x0e21.sui.rpc.v2.AccumulatorWrite.AccumulatorOperationH\x02R\toperation\x88\x01\x01\x12Q\n" +
+	"\n" +
+	"value_kind\x18\x04 \x01(\x0e2-.sui.rpc.v2.AccumulatorWrite.AccumulatorValueH\x03R\tvalueKind\x88\x01\x01\x12(\n" +
+	"\rinteger_value\x18\x05 \x01(\x04H\x04R\fintegerValue\x88\x01\x01\x12#\n" +
+	"\rinteger_tuple\x18\x06 \x03(\x04R\fintegerTuple\x12J\n" +
+	"\x12event_digest_value\x18\a \x03(\v2\x1c.sui.rpc.v2.EventDigestEntryR\x10eventDigestValue\"O\n" +
 	"\x14AccumulatorOperation\x12!\n" +
 	"\x1dACCUMULATOR_OPERATION_UNKNOWN\x10\x00\x12\t\n" +
 	"\x05MERGE\x10\x01\x12\t\n" +
-	"\x05SPLIT\x10\x02B\n" +
+	"\x05SPLIT\x10\x02\"c\n" +
+	"\x10AccumulatorValue\x12\x1d\n" +
+	"\x19ACCUMULATOR_VALUE_UNKNOWN\x10\x00\x12\v\n" +
+	"\aINTEGER\x10\x01\x12\x11\n" +
+	"\rINTEGER_TUPLE\x10\x02\x12\x10\n" +
+	"\fEVENT_DIGEST\x10\x03B\n" +
 	"\n" +
 	"\b_addressB\x13\n" +
 	"\x11_accumulator_typeB\f\n" +
 	"\n" +
-	"_operationB\b\n" +
-	"\x06_valueJ\x04\b\x04\x10\x05\"\x82\x04\n" +
+	"_operationB\r\n" +
+	"\v_value_kindB\x10\n" +
+	"\x0e_integer_value\"\x82\x04\n" +
 	"\x18UnchangedConsensusObject\x12Z\n" +
 	"\x04kind\x18\x01 \x01(\x0e2A.sui.rpc.v2.UnchangedConsensusObject.UnchangedConsensusObjectKindH\x00R\x04kind\x88\x01\x01\x12 \n" +
 	"\tobject_id\x18\x02 \x01(\tH\x01R\bobjectId\x88\x01\x01\x12\x1d\n" +
@@ -904,45 +1057,49 @@ func file_sui_rpc_v2_effects_proto_rawDescGZIP() []byte {
 	return file_sui_rpc_v2_effects_proto_rawDescData
 }
 
-var file_sui_rpc_v2_effects_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
-var file_sui_rpc_v2_effects_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_sui_rpc_v2_effects_proto_enumTypes = make([]protoimpl.EnumInfo, 6)
+var file_sui_rpc_v2_effects_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_sui_rpc_v2_effects_proto_goTypes = []any{
 	(ChangedObject_InputObjectState)(0),                        // 0: sui.rpc.v2.ChangedObject.InputObjectState
 	(ChangedObject_OutputObjectState)(0),                       // 1: sui.rpc.v2.ChangedObject.OutputObjectState
 	(ChangedObject_IdOperation)(0),                             // 2: sui.rpc.v2.ChangedObject.IdOperation
 	(AccumulatorWrite_AccumulatorOperation)(0),                 // 3: sui.rpc.v2.AccumulatorWrite.AccumulatorOperation
-	(UnchangedConsensusObject_UnchangedConsensusObjectKind)(0), // 4: sui.rpc.v2.UnchangedConsensusObject.UnchangedConsensusObjectKind
-	(*TransactionEffects)(nil),                                 // 5: sui.rpc.v2.TransactionEffects
-	(*ChangedObject)(nil),                                      // 6: sui.rpc.v2.ChangedObject
-	(*AccumulatorWrite)(nil),                                   // 7: sui.rpc.v2.AccumulatorWrite
-	(*UnchangedConsensusObject)(nil),                           // 8: sui.rpc.v2.UnchangedConsensusObject
-	(*Bcs)(nil),                                                // 9: sui.rpc.v2.Bcs
-	(*ExecutionStatus)(nil),                                    // 10: sui.rpc.v2.ExecutionStatus
-	(*GasCostSummary)(nil),                                     // 11: sui.rpc.v2.GasCostSummary
-	(*ObjectReference)(nil),                                    // 12: sui.rpc.v2.ObjectReference
-	(*Owner)(nil),                                              // 13: sui.rpc.v2.Owner
+	(AccumulatorWrite_AccumulatorValue)(0),                     // 4: sui.rpc.v2.AccumulatorWrite.AccumulatorValue
+	(UnchangedConsensusObject_UnchangedConsensusObjectKind)(0), // 5: sui.rpc.v2.UnchangedConsensusObject.UnchangedConsensusObjectKind
+	(*TransactionEffects)(nil),                                 // 6: sui.rpc.v2.TransactionEffects
+	(*ChangedObject)(nil),                                      // 7: sui.rpc.v2.ChangedObject
+	(*EventDigestEntry)(nil),                                   // 8: sui.rpc.v2.EventDigestEntry
+	(*AccumulatorWrite)(nil),                                   // 9: sui.rpc.v2.AccumulatorWrite
+	(*UnchangedConsensusObject)(nil),                           // 10: sui.rpc.v2.UnchangedConsensusObject
+	(*Bcs)(nil),                                                // 11: sui.rpc.v2.Bcs
+	(*ExecutionStatus)(nil),                                    // 12: sui.rpc.v2.ExecutionStatus
+	(*GasCostSummary)(nil),                                     // 13: sui.rpc.v2.GasCostSummary
+	(*ObjectReference)(nil),                                    // 14: sui.rpc.v2.ObjectReference
+	(*Owner)(nil),                                              // 15: sui.rpc.v2.Owner
 }
 var file_sui_rpc_v2_effects_proto_depIdxs = []int32{
-	9,  // 0: sui.rpc.v2.TransactionEffects.bcs:type_name -> sui.rpc.v2.Bcs
-	10, // 1: sui.rpc.v2.TransactionEffects.status:type_name -> sui.rpc.v2.ExecutionStatus
-	11, // 2: sui.rpc.v2.TransactionEffects.gas_used:type_name -> sui.rpc.v2.GasCostSummary
-	6,  // 3: sui.rpc.v2.TransactionEffects.gas_object:type_name -> sui.rpc.v2.ChangedObject
-	6,  // 4: sui.rpc.v2.TransactionEffects.changed_objects:type_name -> sui.rpc.v2.ChangedObject
-	8,  // 5: sui.rpc.v2.TransactionEffects.unchanged_consensus_objects:type_name -> sui.rpc.v2.UnchangedConsensusObject
-	12, // 6: sui.rpc.v2.TransactionEffects.unchanged_loaded_runtime_objects:type_name -> sui.rpc.v2.ObjectReference
+	11, // 0: sui.rpc.v2.TransactionEffects.bcs:type_name -> sui.rpc.v2.Bcs
+	12, // 1: sui.rpc.v2.TransactionEffects.status:type_name -> sui.rpc.v2.ExecutionStatus
+	13, // 2: sui.rpc.v2.TransactionEffects.gas_used:type_name -> sui.rpc.v2.GasCostSummary
+	7,  // 3: sui.rpc.v2.TransactionEffects.gas_object:type_name -> sui.rpc.v2.ChangedObject
+	7,  // 4: sui.rpc.v2.TransactionEffects.changed_objects:type_name -> sui.rpc.v2.ChangedObject
+	10, // 5: sui.rpc.v2.TransactionEffects.unchanged_consensus_objects:type_name -> sui.rpc.v2.UnchangedConsensusObject
+	14, // 6: sui.rpc.v2.TransactionEffects.unchanged_loaded_runtime_objects:type_name -> sui.rpc.v2.ObjectReference
 	0,  // 7: sui.rpc.v2.ChangedObject.input_state:type_name -> sui.rpc.v2.ChangedObject.InputObjectState
-	13, // 8: sui.rpc.v2.ChangedObject.input_owner:type_name -> sui.rpc.v2.Owner
+	15, // 8: sui.rpc.v2.ChangedObject.input_owner:type_name -> sui.rpc.v2.Owner
 	1,  // 9: sui.rpc.v2.ChangedObject.output_state:type_name -> sui.rpc.v2.ChangedObject.OutputObjectState
-	13, // 10: sui.rpc.v2.ChangedObject.output_owner:type_name -> sui.rpc.v2.Owner
-	7,  // 11: sui.rpc.v2.ChangedObject.accumulator_write:type_name -> sui.rpc.v2.AccumulatorWrite
+	15, // 10: sui.rpc.v2.ChangedObject.output_owner:type_name -> sui.rpc.v2.Owner
+	9,  // 11: sui.rpc.v2.ChangedObject.accumulator_write:type_name -> sui.rpc.v2.AccumulatorWrite
 	2,  // 12: sui.rpc.v2.ChangedObject.id_operation:type_name -> sui.rpc.v2.ChangedObject.IdOperation
 	3,  // 13: sui.rpc.v2.AccumulatorWrite.operation:type_name -> sui.rpc.v2.AccumulatorWrite.AccumulatorOperation
-	4,  // 14: sui.rpc.v2.UnchangedConsensusObject.kind:type_name -> sui.rpc.v2.UnchangedConsensusObject.UnchangedConsensusObjectKind
-	15, // [15:15] is the sub-list for method output_type
-	15, // [15:15] is the sub-list for method input_type
-	15, // [15:15] is the sub-list for extension type_name
-	15, // [15:15] is the sub-list for extension extendee
-	0,  // [0:15] is the sub-list for field type_name
+	4,  // 14: sui.rpc.v2.AccumulatorWrite.value_kind:type_name -> sui.rpc.v2.AccumulatorWrite.AccumulatorValue
+	8,  // 15: sui.rpc.v2.AccumulatorWrite.event_digest_value:type_name -> sui.rpc.v2.EventDigestEntry
+	5,  // 16: sui.rpc.v2.UnchangedConsensusObject.kind:type_name -> sui.rpc.v2.UnchangedConsensusObject.UnchangedConsensusObjectKind
+	17, // [17:17] is the sub-list for method output_type
+	17, // [17:17] is the sub-list for method input_type
+	17, // [17:17] is the sub-list for extension type_name
+	17, // [17:17] is the sub-list for extension extendee
+	0,  // [0:17] is the sub-list for field type_name
 }
 
 func init() { file_sui_rpc_v2_effects_proto_init() }
@@ -959,13 +1116,14 @@ func file_sui_rpc_v2_effects_proto_init() {
 	file_sui_rpc_v2_effects_proto_msgTypes[1].OneofWrappers = []any{}
 	file_sui_rpc_v2_effects_proto_msgTypes[2].OneofWrappers = []any{}
 	file_sui_rpc_v2_effects_proto_msgTypes[3].OneofWrappers = []any{}
+	file_sui_rpc_v2_effects_proto_msgTypes[4].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_sui_rpc_v2_effects_proto_rawDesc), len(file_sui_rpc_v2_effects_proto_rawDesc)),
-			NumEnums:      5,
-			NumMessages:   4,
+			NumEnums:      6,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
