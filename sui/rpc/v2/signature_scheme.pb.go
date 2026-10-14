@@ -40,6 +40,7 @@ const (
 	SignatureScheme_BLS12381  SignatureScheme = 4
 	SignatureScheme_ZKLOGIN   SignatureScheme = 5
 	SignatureScheme_PASSKEY   SignatureScheme = 6
+	SignatureScheme_MLDSA65   SignatureScheme = 7
 )
 
 // Enum value maps for SignatureScheme.
@@ -52,6 +53,7 @@ var (
 		4: "BLS12381",
 		5: "ZKLOGIN",
 		6: "PASSKEY",
+		7: "MLDSA65",
 	}
 	SignatureScheme_value = map[string]int32{
 		"ED25519":   0,
@@ -61,6 +63,7 @@ var (
 		"BLS12381":  4,
 		"ZKLOGIN":   5,
 		"PASSKEY":   6,
+		"MLDSA65":   7,
 	}
 )
 
@@ -96,7 +99,7 @@ var File_sui_rpc_v2_signature_scheme_proto protoreflect.FileDescriptor
 const file_sui_rpc_v2_signature_scheme_proto_rawDesc = "" +
 	"\n" +
 	"!sui/rpc/v2/signature_scheme.proto\x12\n" +
-	"sui.rpc.v2*r\n" +
+	"sui.rpc.v2*\x7f\n" +
 	"\x0fSignatureScheme\x12\v\n" +
 	"\aED25519\x10\x00\x12\r\n" +
 	"\tSECP256K1\x10\x01\x12\r\n" +
@@ -104,7 +107,8 @@ const file_sui_rpc_v2_signature_scheme_proto_rawDesc = "" +
 	"\bMULTISIG\x10\x03\x12\f\n" +
 	"\bBLS12381\x10\x04\x12\v\n" +
 	"\aZKLOGIN\x10\x05\x12\v\n" +
-	"\aPASSKEY\x10\x06B\xa0\x01\n" +
+	"\aPASSKEY\x10\x06\x12\v\n" +
+	"\aMLDSA65\x10\aB\xa0\x01\n" +
 	"\x0ecom.sui.rpc.v2B\x14SignatureSchemeProtoP\x01Z.github.com/sentioxyz/sui-apis/sui/rpc/v2;rpcv2\xa2\x02\x03SRX\xaa\x02\n" +
 	"Sui.Rpc.V2\xca\x02\n" +
 	"Sui\\Rpc\\V2\xe2\x02\x16Sui\\Rpc\\V2\\GPBMetadata\xea\x02\fSui::Rpc::V2b\x06proto3"

@@ -219,6 +219,8 @@ const (
 	EndOfEpochTransactionKind_ADDRESS_ALIAS_STATE_CREATE EndOfEpochTransactionKind_Kind = 12
 	// Write the end-of-epoch-computed storage cost for accumulator objects.
 	EndOfEpochTransactionKind_WRITE_ACCUMULATOR_STORAGE_COST EndOfEpochTransactionKind_Kind = 13
+	// Create and initialize the Forwarding Address Registry object.
+	EndOfEpochTransactionKind_FORWARDING_ADDRESS_REGISTRY_CREATE EndOfEpochTransactionKind_Kind = 14
 )
 
 // Enum value maps for EndOfEpochTransactionKind_Kind.
@@ -238,22 +240,24 @@ var (
 		11: "DISPLAY_REGISTRY_CREATE",
 		12: "ADDRESS_ALIAS_STATE_CREATE",
 		13: "WRITE_ACCUMULATOR_STORAGE_COST",
+		14: "FORWARDING_ADDRESS_REGISTRY_CREATE",
 	}
 	EndOfEpochTransactionKind_Kind_value = map[string]int32{
-		"KIND_UNKNOWN":                      0,
-		"CHANGE_EPOCH":                      1,
-		"AUTHENTICATOR_STATE_CREATE":        2,
-		"AUTHENTICATOR_STATE_EXPIRE":        3,
-		"RANDOMNESS_STATE_CREATE":           4,
-		"DENY_LIST_STATE_CREATE":            5,
-		"BRIDGE_STATE_CREATE":               6,
-		"BRIDGE_COMMITTEE_INIT":             7,
-		"STORE_EXECUTION_TIME_OBSERVATIONS": 8,
-		"ACCUMULATOR_ROOT_CREATE":           9,
-		"COIN_REGISTRY_CREATE":              10,
-		"DISPLAY_REGISTRY_CREATE":           11,
-		"ADDRESS_ALIAS_STATE_CREATE":        12,
-		"WRITE_ACCUMULATOR_STORAGE_COST":    13,
+		"KIND_UNKNOWN":                       0,
+		"CHANGE_EPOCH":                       1,
+		"AUTHENTICATOR_STATE_CREATE":         2,
+		"AUTHENTICATOR_STATE_EXPIRE":         3,
+		"RANDOMNESS_STATE_CREATE":            4,
+		"DENY_LIST_STATE_CREATE":             5,
+		"BRIDGE_STATE_CREATE":                6,
+		"BRIDGE_COMMITTEE_INIT":              7,
+		"STORE_EXECUTION_TIME_OBSERVATIONS":  8,
+		"ACCUMULATOR_ROOT_CREATE":            9,
+		"COIN_REGISTRY_CREATE":               10,
+		"DISPLAY_REGISTRY_CREATE":            11,
+		"ADDRESS_ALIAS_STATE_CREATE":         12,
+		"WRITE_ACCUMULATOR_STORAGE_COST":     13,
+		"FORWARDING_ADDRESS_REGISTRY_CREATE": 14,
 	}
 )
 
@@ -2941,7 +2945,7 @@ const file_sui_rpc_v2_transaction_proto_rawDesc = "" +
 	"\x04_jwkB\b\n" +
 	"\x06_epoch\"b\n" +
 	"\x15EndOfEpochTransaction\x12I\n" +
-	"\ftransactions\x18\x01 \x03(\v2%.sui.rpc.v2.EndOfEpochTransactionKindR\ftransactions\"\x9c\a\n" +
+	"\ftransactions\x18\x01 \x03(\v2%.sui.rpc.v2.EndOfEpochTransactionKindR\ftransactions\"\xc4\a\n" +
 	"\x19EndOfEpochTransactionKind\x12C\n" +
 	"\x04kind\x18\x01 \x01(\x0e2*.sui.rpc.v2.EndOfEpochTransactionKind.KindH\x01R\x04kind\x88\x01\x01\x12<\n" +
 	"\fchange_epoch\x18\x02 \x01(\v2\x17.sui.rpc.v2.ChangeEpochH\x00R\vchangeEpoch\x12d\n" +
@@ -2949,7 +2953,7 @@ const file_sui_rpc_v2_transaction_proto_rawDesc = "" +
 	"\x1bexecution_time_observations\x18\x04 \x01(\v2%.sui.rpc.v2.ExecutionTimeObservationsH\x00R\x19executionTimeObservations\x12(\n" +
 	"\x0fbridge_chain_id\x18\x05 \x01(\tH\x00R\rbridgeChainId\x124\n" +
 	"\x15bridge_object_version\x18\x06 \x01(\x04H\x00R\x13bridgeObjectVersion\x12#\n" +
-	"\fstorage_cost\x18\a \x01(\x04H\x00R\vstorageCost\"\x96\x03\n" +
+	"\fstorage_cost\x18\a \x01(\x04H\x00R\vstorageCost\"\xbe\x03\n" +
 	"\x04Kind\x12\x10\n" +
 	"\fKIND_UNKNOWN\x10\x00\x12\x10\n" +
 	"\fCHANGE_EPOCH\x10\x01\x12\x1e\n" +
@@ -2965,7 +2969,8 @@ const file_sui_rpc_v2_transaction_proto_rawDesc = "" +
 	"\x12\x1b\n" +
 	"\x17DISPLAY_REGISTRY_CREATE\x10\v\x12\x1e\n" +
 	"\x1aADDRESS_ALIAS_STATE_CREATE\x10\f\x12\"\n" +
-	"\x1eWRITE_ACCUMULATOR_STORAGE_COST\x10\rB\x06\n" +
+	"\x1eWRITE_ACCUMULATOR_STORAGE_COST\x10\r\x12&\n" +
+	"\"FORWARDING_ADDRESS_REGISTRY_CREATE\x10\x0eB\x06\n" +
 	"\x04dataB\a\n" +
 	"\x05_kind\"\xdd\x01\n" +
 	"\x18AuthenticatorStateExpire\x12 \n" +

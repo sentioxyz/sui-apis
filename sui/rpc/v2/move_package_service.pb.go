@@ -28,9 +28,9 @@ type GetPackageRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Required. The `storage_id` of any version of the requested package.
 	//
-	// When `version` is not set, the package stored at exactly this id is
-	// returned. When `version` is set, `package_id` only identifies the
-	// package's upgrade lineage (via its original id), and the requested
+	// When no `selector` is set, the package stored at exactly this id is
+	// returned. When a `selector` is set, `package_id` only identifies the
+	// package's upgrade lineage (via its original id), and the selected
 	// version within that lineage is returned.
 	PackageId *string `protobuf:"bytes,1,opt,name=package_id,json=packageId,proto3,oneof" json:"package_id,omitempty"`
 	// Optional. Return the package in `package_id`'s upgrade lineage that
@@ -38,8 +38,11 @@ type GetPackageRequest struct {
 	//
 	//   - `version`: the package with exactly this version.
 	//   - `at_checkpoint`: the latest package that existed at or before this
-	//     checkpoint. Values above the current ledger tip resolve to the latest
-	//     known version.
+	//     checkpoint. The checkpoint must be at or below the highest checkpoint
+	//     the server has indexed; larger values fail with `NOT_FOUND` instead of
+	//     resolving to the latest known version, so a successful response is
+	//     exact as of `at_checkpoint`. Servers that prune history may also fail
+	//     with `NOT_FOUND` for checkpoints below their lowest available one.
 	//
 	// If neither is set, the package stored at `package_id` is returned.
 	//
