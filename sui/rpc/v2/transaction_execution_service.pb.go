@@ -191,7 +191,11 @@ type SimulateTransactionRequest struct {
 	// Specify whether checks should be ENABLED (default) or DISABLED while executing the transaction
 	Checks *SimulateTransactionRequest_TransactionChecks `protobuf:"varint,3,opt,name=checks,proto3,enum=sui.rpc.v2.SimulateTransactionRequest_TransactionChecks,oneof" json:"checks,omitempty"`
 	// Perform gas selection based on a budget estimation and include the
-	// selected gas payment and budget in the response.
+	// selected gas payment and budget in the response. If selection fails
+	// because the gas owner lacks enough SUI to cover the budget, the returned
+	// error carries a `google.rpc.ErrorInfo` with reason
+	// `INSUFFICIENT_GAS_BALANCE`, or `TRANSACTION_EXECUTION_FAILED` if the
+	// transaction also fails while estimating the budget (see `ErrorReason`).
 	//
 	// This option will be ignored if `checks` is `DISABLED`.
 	DoGasSelection *bool `protobuf:"varint,4,opt,name=do_gas_selection,json=doGasSelection,proto3,oneof" json:"do_gas_selection,omitempty"`

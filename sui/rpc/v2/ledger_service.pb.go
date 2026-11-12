@@ -1172,9 +1172,42 @@ type ListTransactionsRequest struct {
 	// limit and silently coerces larger values down to it. To paginate, pass
 	// the last received `Watermark.cursor` as `options.after` (ascending) or
 	// `options.before` (descending) on the next request.
-	Options       *QueryOptions `protobuf:"bytes,5,opt,name=options,proto3,oneof" json:"options,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Options *QueryOptions `protobuf:"bytes,5,opt,name=options,proto3,oneof" json:"options,omitempty"`
+	// Optional. Transaction position within `start_checkpoint` at which the
+	// query starts (inclusive): within `start_checkpoint`, only transactions
+	// whose `ExecutedTransaction.transaction_index` is at least this value are
+	// returned. Unset starts at the beginning of `start_checkpoint`. An index at
+	// or past the checkpoint's transaction count starts at the next checkpoint.
+	// Requires `start_checkpoint`. When this position leaves transactions of
+	// `start_checkpoint` out, a descending query does not report that checkpoint
+	// as covered in `Watermark.checkpoint`.
+	//
+	// Combines with `options.after` by intersection: the query starts at
+	// whichever of the two is later in ledger order.
+	//
+	// Servers that predate this field ignore it and start at the beginning of
+	// `start_checkpoint`, so clients must still drop transactions before this
+	// position themselves.
+	StartTransactionIndex *uint64 `protobuf:"varint,6,opt,name=start_transaction_index,json=startTransactionIndex,proto3,oneof" json:"start_transaction_index,omitempty"`
+	// Optional. Transaction position within the last checkpoint of the range,
+	// `end_checkpoint - 1`, at which the query ends (exclusive): within that
+	// checkpoint, only transactions whose `ExecutedTransaction.transaction_index`
+	// is below this value are returned, so 0 returns none of it. Unset ends after
+	// the whole checkpoint. An index at or past the checkpoint's transaction
+	// count ends after the whole checkpoint. Requires `end_checkpoint`. A query
+	// that stops at this position ends with `QUERY_END_REASON_CHECKPOINT_BOUND`.
+	// When this position leaves transactions of that checkpoint out, an
+	// ascending query does not report it as covered in `Watermark.checkpoint`.
+	//
+	// Combines with `options.before` by intersection: the query ends at
+	// whichever of the two is earlier in ledger order.
+	//
+	// Servers that predate this field ignore it and return the whole
+	// checkpoint, so clients must still drop transactions at or after this
+	// position themselves.
+	EndTransactionIndex *uint64 `protobuf:"varint,7,opt,name=end_transaction_index,json=endTransactionIndex,proto3,oneof" json:"end_transaction_index,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
 }
 
 func (x *ListTransactionsRequest) Reset() {
@@ -1240,6 +1273,20 @@ func (x *ListTransactionsRequest) GetOptions() *QueryOptions {
 		return x.Options
 	}
 	return nil
+}
+
+func (x *ListTransactionsRequest) GetStartTransactionIndex() uint64 {
+	if x != nil && x.StartTransactionIndex != nil {
+		return *x.StartTransactionIndex
+	}
+	return 0
+}
+
+func (x *ListTransactionsRequest) GetEndTransactionIndex() uint64 {
+	if x != nil && x.EndTransactionIndex != nil {
+		return *x.EndTransactionIndex
+	}
+	return 0
 }
 
 // Response message for LedgerService.ListTransactions.
@@ -1337,7 +1384,61 @@ type ListEventsRequest struct {
 	// limit and silently coerces larger values down to it. To paginate, pass
 	// the last received `Watermark.cursor` as `options.after` (ascending) or
 	// `options.before` (descending) on the next request.
-	Options       *QueryOptions `protobuf:"bytes,5,opt,name=options,proto3,oneof" json:"options,omitempty"`
+	Options *QueryOptions `protobuf:"bytes,5,opt,name=options,proto3,oneof" json:"options,omitempty"`
+	// Optional. Transaction position within `start_checkpoint` at which the
+	// query starts (inclusive): within `start_checkpoint`, only events of
+	// transactions whose `Event.transaction_index` is at least this value are
+	// returned. Unset starts at the beginning of `start_checkpoint`. An index at
+	// or past the checkpoint's transaction count starts at the next checkpoint,
+	// ignoring `start_event_index`. Requires `start_checkpoint`. When this
+	// position leaves events of `start_checkpoint` out, a descending query does
+	// not report that checkpoint as covered in `Watermark.checkpoint`.
+	//
+	// Combines with `options.after` by intersection: the query starts at
+	// whichever of the two is later in ledger order.
+	//
+	// Servers that predate this field ignore it and start at the beginning of
+	// `start_checkpoint`, so clients must still drop events before this
+	// position themselves.
+	StartTransactionIndex *uint64 `protobuf:"varint,6,opt,name=start_transaction_index,json=startTransactionIndex,proto3,oneof" json:"start_transaction_index,omitempty"`
+	// Optional. Event position within the transaction at
+	// `start_transaction_index` at which the query starts (inclusive): within
+	// that transaction, only events whose `Event.event_index` is at least this
+	// value are returned. Unset starts at the transaction's first event. An
+	// index past the transaction's last event starts at the next transaction.
+	// Requires `start_transaction_index`.
+	//
+	// Servers that predate this field ignore it, as for
+	// `start_transaction_index`.
+	StartEventIndex *uint32 `protobuf:"varint,7,opt,name=start_event_index,json=startEventIndex,proto3,oneof" json:"start_event_index,omitempty"`
+	// Optional. Transaction position within the last checkpoint of the range,
+	// `end_checkpoint - 1`, at which the query ends (exclusive): within that
+	// checkpoint, only events of transactions whose `Event.transaction_index` is
+	// below this value are returned, plus, with `end_event_index`, the events
+	// of the transaction at this index that precede it. Unset ends after the
+	// whole checkpoint. An index at or past the checkpoint's transaction count
+	// ends after the whole checkpoint. Requires `end_checkpoint`. A query that
+	// stops at this position ends with `QUERY_END_REASON_CHECKPOINT_BOUND`.
+	// When this position leaves events of that checkpoint out, an ascending
+	// query does not report it as covered in `Watermark.checkpoint`.
+	//
+	// Combines with `options.before` by intersection: the query ends at
+	// whichever of the two is earlier in ledger order.
+	//
+	// Servers that predate this field ignore it and return the whole
+	// checkpoint, so clients must still drop events at or after this position
+	// themselves.
+	EndTransactionIndex *uint64 `protobuf:"varint,8,opt,name=end_transaction_index,json=endTransactionIndex,proto3,oneof" json:"end_transaction_index,omitempty"`
+	// Optional. Event position within the transaction at
+	// `end_transaction_index` at which the query ends (exclusive): events of
+	// that transaction whose `Event.event_index` is below this value are also
+	// returned. Unset, like 0, returns none of the transaction's events. An
+	// index past the transaction's last event returns all of them. Requires
+	// `end_transaction_index`.
+	//
+	// Servers that predate this field ignore it, as for
+	// `end_transaction_index`.
+	EndEventIndex *uint32 `protobuf:"varint,9,opt,name=end_event_index,json=endEventIndex,proto3,oneof" json:"end_event_index,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1405,6 +1506,34 @@ func (x *ListEventsRequest) GetOptions() *QueryOptions {
 		return x.Options
 	}
 	return nil
+}
+
+func (x *ListEventsRequest) GetStartTransactionIndex() uint64 {
+	if x != nil && x.StartTransactionIndex != nil {
+		return *x.StartTransactionIndex
+	}
+	return 0
+}
+
+func (x *ListEventsRequest) GetStartEventIndex() uint32 {
+	if x != nil && x.StartEventIndex != nil {
+		return *x.StartEventIndex
+	}
+	return 0
+}
+
+func (x *ListEventsRequest) GetEndTransactionIndex() uint64 {
+	if x != nil && x.EndTransactionIndex != nil {
+		return *x.EndTransactionIndex
+	}
+	return 0
+}
+
+func (x *ListEventsRequest) GetEndEventIndex() uint32 {
+	if x != nil && x.EndEventIndex != nil {
+		return *x.EndEventIndex
+	}
+	return 0
 }
 
 // Response message for LedgerService.ListEvents.
@@ -1597,20 +1726,24 @@ const file_sui_rpc_v2_ledger_service_proto_rawDesc = "" +
 	"\v_checkpointB\f\n" +
 	"\n" +
 	"_watermarkB\x06\n" +
-	"\x04_end\"\xf5\x02\n" +
+	"\x04_end\"\xa1\x04\n" +
 	"\x17ListTransactionsRequest\x12<\n" +
 	"\tread_mask\x18\x01 \x01(\v2\x1a.google.protobuf.FieldMaskH\x00R\breadMask\x88\x01\x01\x12.\n" +
 	"\x10start_checkpoint\x18\x02 \x01(\x04H\x01R\x0fstartCheckpoint\x88\x01\x01\x12*\n" +
 	"\x0eend_checkpoint\x18\x03 \x01(\x04H\x02R\rendCheckpoint\x88\x01\x01\x12:\n" +
 	"\x06filter\x18\x04 \x01(\v2\x1d.sui.rpc.v2.TransactionFilterH\x03R\x06filter\x88\x01\x01\x127\n" +
-	"\aoptions\x18\x05 \x01(\v2\x18.sui.rpc.v2.QueryOptionsH\x04R\aoptions\x88\x01\x01B\f\n" +
+	"\aoptions\x18\x05 \x01(\v2\x18.sui.rpc.v2.QueryOptionsH\x04R\aoptions\x88\x01\x01\x12;\n" +
+	"\x17start_transaction_index\x18\x06 \x01(\x04H\x05R\x15startTransactionIndex\x88\x01\x01\x127\n" +
+	"\x15end_transaction_index\x18\a \x01(\x04H\x06R\x13endTransactionIndex\x88\x01\x01B\f\n" +
 	"\n" +
 	"_read_maskB\x13\n" +
 	"\x11_start_checkpointB\x11\n" +
 	"\x0f_end_checkpointB\t\n" +
 	"\a_filterB\n" +
 	"\n" +
-	"\b_options\"\xef\x01\n" +
+	"\b_optionsB\x1a\n" +
+	"\x18_start_transaction_indexB\x18\n" +
+	"\x16_end_transaction_index\"\xef\x01\n" +
 	"\x18ListTransactionsResponse\x12F\n" +
 	"\vtransaction\x18\x01 \x01(\v2\x1f.sui.rpc.v2.ExecutedTransactionH\x00R\vtransaction\x88\x01\x01\x128\n" +
 	"\twatermark\x18\x02 \x01(\v2\x15.sui.rpc.v2.WatermarkH\x01R\twatermark\x88\x01\x01\x12+\n" +
@@ -1618,20 +1751,28 @@ const file_sui_rpc_v2_ledger_service_proto_rawDesc = "" +
 	"\f_transactionB\f\n" +
 	"\n" +
 	"_watermarkB\x06\n" +
-	"\x04_end\"\xe9\x02\n" +
+	"\x04_end\"\x9d\x05\n" +
 	"\x11ListEventsRequest\x12<\n" +
 	"\tread_mask\x18\x01 \x01(\v2\x1a.google.protobuf.FieldMaskH\x00R\breadMask\x88\x01\x01\x12.\n" +
 	"\x10start_checkpoint\x18\x02 \x01(\x04H\x01R\x0fstartCheckpoint\x88\x01\x01\x12*\n" +
 	"\x0eend_checkpoint\x18\x03 \x01(\x04H\x02R\rendCheckpoint\x88\x01\x01\x124\n" +
 	"\x06filter\x18\x04 \x01(\v2\x17.sui.rpc.v2.EventFilterH\x03R\x06filter\x88\x01\x01\x127\n" +
-	"\aoptions\x18\x05 \x01(\v2\x18.sui.rpc.v2.QueryOptionsH\x04R\aoptions\x88\x01\x01B\f\n" +
+	"\aoptions\x18\x05 \x01(\v2\x18.sui.rpc.v2.QueryOptionsH\x04R\aoptions\x88\x01\x01\x12;\n" +
+	"\x17start_transaction_index\x18\x06 \x01(\x04H\x05R\x15startTransactionIndex\x88\x01\x01\x12/\n" +
+	"\x11start_event_index\x18\a \x01(\rH\x06R\x0fstartEventIndex\x88\x01\x01\x127\n" +
+	"\x15end_transaction_index\x18\b \x01(\x04H\aR\x13endTransactionIndex\x88\x01\x01\x12+\n" +
+	"\x0fend_event_index\x18\t \x01(\rH\bR\rendEventIndex\x88\x01\x01B\f\n" +
 	"\n" +
 	"_read_maskB\x13\n" +
 	"\x11_start_checkpointB\x11\n" +
 	"\x0f_end_checkpointB\t\n" +
 	"\a_filterB\n" +
 	"\n" +
-	"\b_options\"\xc9\x01\n" +
+	"\b_optionsB\x1a\n" +
+	"\x18_start_transaction_indexB\x14\n" +
+	"\x12_start_event_indexB\x18\n" +
+	"\x16_end_transaction_indexB\x12\n" +
+	"\x10_end_event_index\"\xc9\x01\n" +
 	"\x12ListEventsResponse\x12,\n" +
 	"\x05event\x18\x01 \x01(\v2\x11.sui.rpc.v2.EventH\x00R\x05event\x88\x01\x01\x128\n" +
 	"\twatermark\x18\x02 \x01(\v2\x15.sui.rpc.v2.WatermarkH\x01R\twatermark\x88\x01\x01\x12+\n" +

@@ -28,9 +28,9 @@ const (
 type Ordering int32
 
 const (
-	// Return results in increasing cursor order.
+	// Return results in increasing ledger order.
 	Ordering_ORDERING_ASCENDING Ordering = 0
-	// Return results in decreasing cursor order.
+	// Return results in decreasing ledger order.
 	Ordering_ORDERING_DESCENDING Ordering = 1
 )
 
@@ -88,8 +88,10 @@ const (
 	// frame carries no item. Its watermark cursor is the authoritative scan
 	// frontier from which to resume.
 	QueryEndReason_QUERY_END_REASON_SCAN_LIMIT QueryEndReason = 2
-	// The scan reached a requested checkpoint range bound. The terminal frame
-	// carries no item.
+	// The scan reached the edge of the window the request set: its checkpoint
+	// range bound, or a start or end position the request set within a
+	// checkpoint at that range's edge (for example `end_transaction_index` on
+	// `ListTransactionsRequest`). The terminal frame carries no item.
 	QueryEndReason_QUERY_END_REASON_CHECKPOINT_BOUND QueryEndReason = 3
 	// The scan reached an exclusive cursor bound. The terminal frame carries no
 	// item. Its watermark cursor represents that resolved bound without claiming
@@ -244,16 +246,124 @@ func (x *QueryOptions) GetOrdering() Ordering {
 	return Ordering_ORDERING_ASCENDING
 }
 
-// Progress marker for a query scan. Carried on every response frame, whether or
-// not the frame delivers a matching item. Watermarks never regress in the
-// requested ordering, but consecutive frames may carry the same watermark when
+// A point in ledger order: the boundary between the items whose keys sort
+// below this position and the items whose keys sort at or above it.
+//
+// An item's key is (`sequence_number`) for a `Checkpoint`, (`checkpoint`,
+// `transaction_index`) for an `ExecutedTransaction`, and (`checkpoint`,
+// `transaction_index`, `event_index`) for an `Event`. Keys and positions sort
+// lexicographically, with unset fields counting as 0.
+//
+// An index past the last transaction of a checkpoint, or past the last event of
+// a transaction, names the start of the next one, so different positions can
+// name the same boundary: after the last of checkpoint `c`'s `n` transactions,
+// both (`c`, `n`) and (`c + 1`, 0) name the start of checkpoint `c + 1`.
+// Sorting never contradicts ledger order: a position that sorts below another
+// is at or before it. Use comparisons to drop what is behind, and never assume
+// that positions that differ name different boundaries.
+//
+// To bound a request at a position: as its start, set `start_checkpoint` to
+// `checkpoint` and, when either index is nonzero, the start index fields to
+// both indexes, including one that is 0 (`start_transaction_index`, plus
+// `start_event_index` for events). As its end, set `end_checkpoint` to
+// `checkpoint` when both indexes are 0; otherwise set `end_checkpoint` to
+// `checkpoint + 1` and the end index fields to both indexes
+// (`end_transaction_index`, plus `end_event_index` for events). Checkpoint
+// positions carry only `checkpoint`, so they set only `start_checkpoint` or
+// `end_checkpoint`.
+type LedgerPosition struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Checkpoint sequence number.
+	Checkpoint *uint64 `protobuf:"varint,1,opt,name=checkpoint,proto3,oneof" json:"checkpoint,omitempty"`
+	// Zero-based position of a transaction within `checkpoint`.
+	TransactionIndex *uint64 `protobuf:"varint,2,opt,name=transaction_index,json=transactionIndex,proto3,oneof" json:"transaction_index,omitempty"`
+	// Zero-based index of an event within its transaction's event list. Event
+	// streams only.
+	EventIndex    *uint32 `protobuf:"varint,3,opt,name=event_index,json=eventIndex,proto3,oneof" json:"event_index,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *LedgerPosition) Reset() {
+	*x = LedgerPosition{}
+	mi := &file_sui_rpc_v2_query_options_proto_msgTypes[1]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LedgerPosition) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LedgerPosition) ProtoMessage() {}
+
+func (x *LedgerPosition) ProtoReflect() protoreflect.Message {
+	mi := &file_sui_rpc_v2_query_options_proto_msgTypes[1]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LedgerPosition.ProtoReflect.Descriptor instead.
+func (*LedgerPosition) Descriptor() ([]byte, []int) {
+	return file_sui_rpc_v2_query_options_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *LedgerPosition) GetCheckpoint() uint64 {
+	if x != nil && x.Checkpoint != nil {
+		return *x.Checkpoint
+	}
+	return 0
+}
+
+func (x *LedgerPosition) GetTransactionIndex() uint64 {
+	if x != nil && x.TransactionIndex != nil {
+		return *x.TransactionIndex
+	}
+	return 0
+}
+
+func (x *LedgerPosition) GetEventIndex() uint32 {
+	if x != nil && x.EventIndex != nil {
+		return *x.EventIndex
+	}
+	return 0
+}
+
+// Progress of a scan, carried on every response frame, whether or not the
+// frame delivers a matching item. Watermarks never regress in the requested
+// ordering, but consecutive frames may carry the same watermark when
 // additional work does not advance the safe resume frontier.
+//
+// A watermark has two parts:
+//
+//   - The resume point, in two forms: `cursor`, opaque, for the server, and
+//     `cursor_position`, in ledger coordinates, for clients to order frames and
+//     drop duplicates.
+//   - Coverage: `checkpoint`, the boundary checkpoint the scan has proven fully
+//     covered. It trails the resume point.
+//
+// To continue in the same direction, set the request's start (ascending) or
+// end (descending) at `cursor_position`. To read in the other direction, set
+// the other bound at `cursor_position` from a frame without an item; from a
+// frame with an item, start a page after the item at its key with the finest
+// index incremented, or end a page before it at its key. In both cases pass
+// `cursor` as `options.after` with a start and as `options.before` with an
+// end.
 type Watermark struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Opaque cursor at this scan position. Set on every watermark. Use as
+	// Opaque cursor at the resume point. Set on every watermark. Use as
 	// `options.after` (ascending) or `options.before` (descending) on the next
 	// request to resume from here. The most recently received cursor is always
 	// the safe resume point.
+	//
+	// Pass cursors back unchanged; never compare or inspect them. Cursors that
+	// differ can name the same point, and their encoding may change.
 	Cursor []byte `protobuf:"bytes,1,opt,name=cursor,proto3,oneof" json:"cursor,omitempty"`
 	// The inclusive boundary checkpoint that the scan has fully covered within
 	// the request's effective interval, in the request's ordering direction: an
@@ -267,14 +377,34 @@ type Watermark struct {
 	// scan resumed from a cursor that lands mid-checkpoint leaves this unset
 	// until the next checkpoint boundary in the scan direction is fully covered.
 	// A watermark still has a valid resume cursor while this field is unset.
-	Checkpoint    *uint64 `protobuf:"varint,2,opt,name=checkpoint,proto3,oneof" json:"checkpoint,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Checkpoint *uint64 `protobuf:"varint,2,opt,name=checkpoint,proto3,oneof" json:"checkpoint,omitempty"`
+	// The resume point in ledger coordinates. Set on every watermark by servers
+	// that support it.
+	//
+	// Ascending, every match from the request's start up to (excluding)
+	// `cursor_position` has been delivered. Descending, every match from
+	// `cursor_position` up to (excluding) the request's end has been delivered.
+	//
+	// On a frame that carries an item, ascending, it is the boundary just past
+	// the item, so it is not the item's own key: it is that key with its finest
+	// index incremented (`event_index` for events, `transaction_index` for
+	// transactions, `checkpoint` for checkpoints). Descending, it is the boundary
+	// just before the item, which is the item's key.
+	//
+	// It never moves before the request's start (ascending) or past its end
+	// (descending), so an ascending request that starts beyond what the server
+	// has indexed gets its start echoed back: the resume point says where the
+	// client is, not where the ledger is. `cursor` may then name an earlier
+	// point; bounds intersect, so resuming with both starts at
+	// `cursor_position`.
+	CursorPosition *LedgerPosition `protobuf:"bytes,4,opt,name=cursor_position,json=cursorPosition,proto3,oneof" json:"cursor_position,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *Watermark) Reset() {
 	*x = Watermark{}
-	mi := &file_sui_rpc_v2_query_options_proto_msgTypes[1]
+	mi := &file_sui_rpc_v2_query_options_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -286,7 +416,7 @@ func (x *Watermark) String() string {
 func (*Watermark) ProtoMessage() {}
 
 func (x *Watermark) ProtoReflect() protoreflect.Message {
-	mi := &file_sui_rpc_v2_query_options_proto_msgTypes[1]
+	mi := &file_sui_rpc_v2_query_options_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -299,7 +429,7 @@ func (x *Watermark) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Watermark.ProtoReflect.Descriptor instead.
 func (*Watermark) Descriptor() ([]byte, []int) {
-	return file_sui_rpc_v2_query_options_proto_rawDescGZIP(), []int{1}
+	return file_sui_rpc_v2_query_options_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *Watermark) GetCursor() []byte {
@@ -314,6 +444,13 @@ func (x *Watermark) GetCheckpoint() uint64 {
 		return *x.Checkpoint
 	}
 	return 0
+}
+
+func (x *Watermark) GetCursorPosition() *LedgerPosition {
+	if x != nil {
+		return x.CursorPosition
+	}
+	return nil
 }
 
 // Marker for the final frame of a successful query stream. Every successful
@@ -336,7 +473,7 @@ type QueryEnd struct {
 
 func (x *QueryEnd) Reset() {
 	*x = QueryEnd{}
-	mi := &file_sui_rpc_v2_query_options_proto_msgTypes[2]
+	mi := &file_sui_rpc_v2_query_options_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -348,7 +485,7 @@ func (x *QueryEnd) String() string {
 func (*QueryEnd) ProtoMessage() {}
 
 func (x *QueryEnd) ProtoReflect() protoreflect.Message {
-	mi := &file_sui_rpc_v2_query_options_proto_msgTypes[2]
+	mi := &file_sui_rpc_v2_query_options_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -361,7 +498,7 @@ func (x *QueryEnd) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QueryEnd.ProtoReflect.Descriptor instead.
 func (*QueryEnd) Descriptor() ([]byte, []int) {
-	return file_sui_rpc_v2_query_options_proto_rawDescGZIP(), []int{2}
+	return file_sui_rpc_v2_query_options_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *QueryEnd) GetReason() QueryEndReason {
@@ -385,14 +522,26 @@ const file_sui_rpc_v2_query_options_proto_rawDesc = "" +
 	"\x06_limitB\b\n" +
 	"\x06_afterB\t\n" +
 	"\a_beforeB\v\n" +
-	"\t_ordering\"g\n" +
+	"\t_ordering\"\xc2\x01\n" +
+	"\x0eLedgerPosition\x12#\n" +
+	"\n" +
+	"checkpoint\x18\x01 \x01(\x04H\x00R\n" +
+	"checkpoint\x88\x01\x01\x120\n" +
+	"\x11transaction_index\x18\x02 \x01(\x04H\x01R\x10transactionIndex\x88\x01\x01\x12$\n" +
+	"\vevent_index\x18\x03 \x01(\rH\x02R\n" +
+	"eventIndex\x88\x01\x01B\r\n" +
+	"\v_checkpointB\x14\n" +
+	"\x12_transaction_indexB\x0e\n" +
+	"\f_event_index\"\xc5\x01\n" +
 	"\tWatermark\x12\x1b\n" +
 	"\x06cursor\x18\x01 \x01(\fH\x00R\x06cursor\x88\x01\x01\x12#\n" +
 	"\n" +
 	"checkpoint\x18\x02 \x01(\x04H\x01R\n" +
-	"checkpoint\x88\x01\x01B\t\n" +
+	"checkpoint\x88\x01\x01\x12H\n" +
+	"\x0fcursor_position\x18\x04 \x01(\v2\x1a.sui.rpc.v2.LedgerPositionH\x02R\x0ecursorPosition\x88\x01\x01B\t\n" +
 	"\a_cursorB\r\n" +
-	"\v_checkpoint\"N\n" +
+	"\v_checkpointB\x12\n" +
+	"\x10_cursor_position\"N\n" +
 	"\bQueryEnd\x127\n" +
 	"\x06reason\x18\x01 \x01(\x0e2\x1a.sui.rpc.v2.QueryEndReasonH\x00R\x06reason\x88\x01\x01B\t\n" +
 	"\a_reason*;\n" +
@@ -423,22 +572,24 @@ func file_sui_rpc_v2_query_options_proto_rawDescGZIP() []byte {
 }
 
 var file_sui_rpc_v2_query_options_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_sui_rpc_v2_query_options_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_sui_rpc_v2_query_options_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_sui_rpc_v2_query_options_proto_goTypes = []any{
-	(Ordering)(0),        // 0: sui.rpc.v2.Ordering
-	(QueryEndReason)(0),  // 1: sui.rpc.v2.QueryEndReason
-	(*QueryOptions)(nil), // 2: sui.rpc.v2.QueryOptions
-	(*Watermark)(nil),    // 3: sui.rpc.v2.Watermark
-	(*QueryEnd)(nil),     // 4: sui.rpc.v2.QueryEnd
+	(Ordering)(0),          // 0: sui.rpc.v2.Ordering
+	(QueryEndReason)(0),    // 1: sui.rpc.v2.QueryEndReason
+	(*QueryOptions)(nil),   // 2: sui.rpc.v2.QueryOptions
+	(*LedgerPosition)(nil), // 3: sui.rpc.v2.LedgerPosition
+	(*Watermark)(nil),      // 4: sui.rpc.v2.Watermark
+	(*QueryEnd)(nil),       // 5: sui.rpc.v2.QueryEnd
 }
 var file_sui_rpc_v2_query_options_proto_depIdxs = []int32{
 	0, // 0: sui.rpc.v2.QueryOptions.ordering:type_name -> sui.rpc.v2.Ordering
-	1, // 1: sui.rpc.v2.QueryEnd.reason:type_name -> sui.rpc.v2.QueryEndReason
-	2, // [2:2] is the sub-list for method output_type
-	2, // [2:2] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	3, // 1: sui.rpc.v2.Watermark.cursor_position:type_name -> sui.rpc.v2.LedgerPosition
+	1, // 2: sui.rpc.v2.QueryEnd.reason:type_name -> sui.rpc.v2.QueryEndReason
+	3, // [3:3] is the sub-list for method output_type
+	3, // [3:3] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_sui_rpc_v2_query_options_proto_init() }
@@ -449,13 +600,14 @@ func file_sui_rpc_v2_query_options_proto_init() {
 	file_sui_rpc_v2_query_options_proto_msgTypes[0].OneofWrappers = []any{}
 	file_sui_rpc_v2_query_options_proto_msgTypes[1].OneofWrappers = []any{}
 	file_sui_rpc_v2_query_options_proto_msgTypes[2].OneofWrappers = []any{}
+	file_sui_rpc_v2_query_options_proto_msgTypes[3].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_sui_rpc_v2_query_options_proto_rawDesc), len(file_sui_rpc_v2_query_options_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   3,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

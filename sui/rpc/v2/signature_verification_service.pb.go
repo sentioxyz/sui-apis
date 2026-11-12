@@ -42,9 +42,17 @@ type VerifySignatureRequest struct {
 	Address *string `protobuf:"bytes,3,opt,name=address,proto3,oneof" json:"address,omitempty"`
 	// The set of JWKs to use when verifying Zklogin signatures.
 	// If this is empty the current set of valid JWKs stored onchain will be used
-	Jwks          []*ActiveJwk `protobuf:"bytes,4,rep,name=jwks,proto3" json:"jwks,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Jwks []*ActiveJwk `protobuf:"bytes,4,rep,name=jwks,proto3" json:"jwks,omitempty"`
+	// Optional. If true, `address` is required and the signature must be from a
+	// member of `address`'s current `AddressAliases` set rather than from
+	// `address` itself. An address with no `AddressAliases` set is its own only
+	// alias.
+	//
+	// Servers that predate this field ignore it, so clients must check
+	// `address_aliases_checked` in the response.
+	CheckAddressAliases *bool `protobuf:"varint,6,opt,name=check_address_aliases,json=checkAddressAliases,proto3,oneof" json:"check_address_aliases,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
 }
 
 func (x *VerifySignatureRequest) Reset() {
@@ -105,14 +113,24 @@ func (x *VerifySignatureRequest) GetJwks() []*ActiveJwk {
 	return nil
 }
 
+func (x *VerifySignatureRequest) GetCheckAddressAliases() bool {
+	if x != nil && x.CheckAddressAliases != nil {
+		return *x.CheckAddressAliases
+	}
+	return false
+}
+
 type VerifySignatureResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Indicates if the provided signature was valid given the requested parameters.
 	IsValid *bool `protobuf:"varint,1,opt,name=is_valid,json=isValid,proto3,oneof" json:"is_valid,omitempty"`
 	// If `is_valid` is `false`, this is the reason for why the signature verification failed.
-	Reason        *string `protobuf:"bytes,2,opt,name=reason,proto3,oneof" json:"reason,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Reason *string `protobuf:"bytes,2,opt,name=reason,proto3,oneof" json:"reason,omitempty"`
+	// Set to true when the server applied `check_address_aliases`, whether or
+	// not the signature is valid. Unset by servers that predate it.
+	AddressAliasesChecked *bool `protobuf:"varint,3,opt,name=address_aliases_checked,json=addressAliasesChecked,proto3,oneof" json:"address_aliases_checked,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
 }
 
 func (x *VerifySignatureResponse) Reset() {
@@ -159,28 +177,39 @@ func (x *VerifySignatureResponse) GetReason() string {
 	return ""
 }
 
+func (x *VerifySignatureResponse) GetAddressAliasesChecked() bool {
+	if x != nil && x.AddressAliasesChecked != nil {
+		return *x.AddressAliasesChecked
+	}
+	return false
+}
+
 var File_sui_rpc_v2_signature_verification_service_proto protoreflect.FileDescriptor
 
 const file_sui_rpc_v2_signature_verification_service_proto_rawDesc = "" +
 	"\n" +
 	"/sui/rpc/v2/signature_verification_service.proto\x12\n" +
-	"sui.rpc.v2\x1a\x14sui/rpc/v2/bcs.proto\x1a\x1asui/rpc/v2/signature.proto\x1a\x1csui/rpc/v2/transaction.proto\"\xf6\x01\n" +
+	"sui.rpc.v2\x1a\x14sui/rpc/v2/bcs.proto\x1a\x1asui/rpc/v2/signature.proto\x1a\x1csui/rpc/v2/transaction.proto\"\xc9\x02\n" +
 	"\x16VerifySignatureRequest\x12.\n" +
 	"\amessage\x18\x01 \x01(\v2\x0f.sui.rpc.v2.BcsH\x00R\amessage\x88\x01\x01\x12<\n" +
 	"\tsignature\x18\x02 \x01(\v2\x19.sui.rpc.v2.UserSignatureH\x01R\tsignature\x88\x01\x01\x12\x1d\n" +
 	"\aaddress\x18\x03 \x01(\tH\x02R\aaddress\x88\x01\x01\x12)\n" +
-	"\x04jwks\x18\x04 \x03(\v2\x15.sui.rpc.v2.ActiveJwkR\x04jwksB\n" +
+	"\x04jwks\x18\x04 \x03(\v2\x15.sui.rpc.v2.ActiveJwkR\x04jwks\x127\n" +
+	"\x15check_address_aliases\x18\x06 \x01(\bH\x03R\x13checkAddressAliases\x88\x01\x01B\n" +
 	"\n" +
 	"\b_messageB\f\n" +
 	"\n" +
 	"_signatureB\n" +
 	"\n" +
-	"\b_address\"n\n" +
+	"\b_addressB\x18\n" +
+	"\x16_check_address_aliases\"\xc7\x01\n" +
 	"\x17VerifySignatureResponse\x12\x1e\n" +
 	"\bis_valid\x18\x01 \x01(\bH\x00R\aisValid\x88\x01\x01\x12\x1b\n" +
-	"\x06reason\x18\x02 \x01(\tH\x01R\x06reason\x88\x01\x01B\v\n" +
+	"\x06reason\x18\x02 \x01(\tH\x01R\x06reason\x88\x01\x01\x12;\n" +
+	"\x17address_aliases_checked\x18\x03 \x01(\bH\x02R\x15addressAliasesChecked\x88\x01\x01B\v\n" +
 	"\t_is_validB\t\n" +
-	"\a_reason2z\n" +
+	"\a_reasonB\x1a\n" +
+	"\x18_address_aliases_checked2z\n" +
 	"\x1cSignatureVerificationService\x12Z\n" +
 	"\x0fVerifySignature\x12\".sui.rpc.v2.VerifySignatureRequest\x1a#.sui.rpc.v2.VerifySignatureResponseB\xad\x01\n" +
 	"\x0ecom.sui.rpc.v2B!SignatureVerificationServiceProtoP\x01Z.github.com/sentioxyz/sui-apis/sui/rpc/v2;rpcv2\xa2\x02\x03SRX\xaa\x02\n" +
